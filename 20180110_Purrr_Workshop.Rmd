@@ -1,0 +1,455 @@
+---
+title: "Purrr Tutorial"
+author: "Joyce Robbins"
+output: slidy_presentation
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, 
+                      warning = FALSE)
+```
+
+# Purrr Tutorial
+
+January 10, 2018
+
+Joyce Robbins
+
+jtr13@columbia.edu      Twitter: @jtrnyc
+
+this file: 
+
+
+# Agenda
+
+### 1. Why purrr?
+
+(or apply functions)
+
+* Saves you work (= time)
+
+* Cleaner code
+
+
+
+### 2. <strike>Review of fundamentals</strike>
+  Mindfulness/Vigilance of
+  
+  * data types: integer, double, logical, character, factor
+  
+  * data structures: vector, data frame / tibble, list (, matrix, array)
+  
+  ... in the context of functions
+
+
+
+### 3. Data frames
+
+  * do something to a column
+  
+  * do it to every column
+
+
+
+### 4. Simple (unnested) lists
+
+  * get the information that you need from each element
+  
+  * combine multiple pieces of information into a data frame
+
+
+
+### 5. Nested lists
+
+
+
+
+
+
+
+
+# R you ready?
+
+```{r ready}
+knitr::include_graphics("wecandoit.jpg")
+```
+
+
+
+
+
+
+
+
+
+
+
+# Data structures
+
+### vector
+
+```{r vector1}
+x <- c(3, 4, 5)
+x
+```
+ 
+
+
+### data frame / tibble
+
+```{r tibble1}
+tib <- tibble(a = c(1, 2), b = c(3, 4), c = c("cat", "dog"))
+tib
+```
+
+```{r dataframe1}
+df <- data.frame(a = c(1, 2), b = c(3, 4), c = c("cat", "dog"))
+df
+```
+
+
+
+### list
+
+```{r list1}
+x <- list(a = c(first = 1, second = 2),
+         b = c(TRUE, FALSE, TRUE), 
+         c = c("cat", "dog", "fish", "elephant"))
+```
+
+What does the data structure look like?
+
+--> You need to know what you have
+
+My 3 go-tos: 
+
+ * x
+
+ * str(x)
+
+ * Object Explorer a.k.a. View(x)
+
+
+```{r x}
+x
+```
+
+
+
+
+str()
+```{r str1}
+knitr::include_graphics("stiritup.png")
+```
+
+
+
+```{r strx}
+str(x)
+```
+
+
+
+
+
+Object Explorer
+
+
+
+
+```{r another example}
+xvar <- rnorm(10)
+yvar <- xvar + rnorm(10)
+mod <- lm(yvar ~ xvar)
+# Go to Object Explorer
+```
+
+
+
+
+# Simple functions
+
+
+```{r simple}
+x <- 1:10
+x
+```
+
+What's the input? What's the output?
+
+```{r min1}
+min(x)
+```
+
+What's the input? What's the output?
+
+```{r mean1}
+mean(x)
+```
+
+What's the input? What's the output?
+
+```{r length1}
+length(x)
+```
+
+
+
+# More simple functions
+
+What's going on now?
+
+```{r sqrt1}
+sqrt(x)
+```
+
+
+
+
+
+```{r round1}
+round(x + .5)
+```
+
+
+
+
+
+```{r round2}
+y <- x/10 + 1.05
+y
+round(y, 1)
+```
+
+Now we're ready for map (or lapply) to do the same thing to each column of a data frame.
+
+
+# Data frames
+
+```{r dataframe1}
+df <- data.frame(
+  x = c(3, 4, 5, 6),
+  y = c(7, 8, 9, 10),
+  z = c(11, 12, 13, 14))
+df
+```
+
+How do we take the mean of each column?
+
+
+```{r forloop1}
+# Don't do this:
+for (i in 1:3) print(mean(df[,i]))
+```
+
+
+```{r lapply1}
+# Do this:
+lapply(df, mean)
+```
+
+
+
+```{r map1}
+# Or this:
+map(df, mean)
+```
+
+
+Find the total snowfall by day (that is, find the sum for each column separately)
+
+snow.csv: February 2017, New York State, daily by collecting station (349)
+
+```{r snow}
+snow <- read_csv("snow.csv")
+dim(snow)
+View(snow)
+```
+
+
+
+```{r snowtotals}
+snowsum <- function(x) sum(na.omit(x))
+
+# test it
+snowsum(c(NA, 3, 5))
+
+total <- map(snow, snowsum)
+total[1:3]
+```
+
+
+
+Why not use colSums?
+
+```{r colSums1}
+colSums(na.omit(snow))[1:3]
+```
+
+
+Use an anonymous function to do the same thing:
+
+```{r before}
+# from before:
+snowsum <- function(x) sum(na.omit(x))
+total <- map(snow, snowsum)
+```
+
+
+# Version 1: replace function name with function contents
+
+```{r version1}
+total <- map(snow, function(x) sum(na.omit(x)))
+total[1:3]
+```
+
+
+# Version 2: replace "x" with ".x" (it's just another variable name)
+
+```{r}
+total <- map(snow, function(.x) sum(na.omit(.x)))
+total[1:3]
+```
+
+# Version 3: replace "function(.x)" with "~"  (you must use .x if you do this)
+
+```{r}
+total <- map(snow, ~sum(na.omit(.x)))
+```
+
+-> If you don't like this notation, stick with named functions!
+
+-> One more thing: we can use typed functions 
+
+```{r}
+total <- map_dbl(snow, ~sum(na.omit(.x)))
+total
+```
+
+-> map returns a LIST of double, map_dbl returns a VECTOR of double
+
+-> map_lgl, map_int, map_chr all return VECTORS of type ...
+
+RECAP
+-> We can do the same thing to every column of a data frame
+
+-> Get the function the work on one vector before you try it on the whole data frame
+
+
+# Lists
+
+```{r}
+x <- list(a = c(first = 1, second = 2),
+         b = c(TRUE, FALSE, TRUE), 
+         c = c("cat", "dog", "fish", "elephant"))
+```
+
+Get the first item in each list:
+
+```{r}
+map(x, 1)
+```
+
+Get the second item:
+
+```{r}
+map(x, 2)
+```
+
+Get the third item:
+```{r}
+map(x, 3)
+```
+
+Get the last item:
+
+```{r}
+map(x, tail, 1)
+```
+
+```{r}
+lapply(x, tail, 1)
+```
+
+Get the named items from a list:
+
+```{r}
+organizers <- list(
+  list(firstname = "Soumya", lastname = "Kalra"),
+  list(firstname = "Brooke", lastname = "Watson"),
+  list(firstname = "Emily", lastname = "Zabor"),
+  list(firstname = "Gabriela", lastname = "Hempfling"),
+  list(firstname = "Emily", lastname = "Robinson"),
+  list(firstname = "Jasmine", lastname = "Williams"),
+  list(firstname = "Birunda", lastname = "Chelliah"))
+```
+
+```{r}
+map(organizers, "firstname")
+```
+
+
+```{r}
+map_chr(organizers, "firstname")
+```
+
+Create a data frame from a list:
+
+```{r}
+map(organizers, `[`, "firstname")
+```
+
+```{r}
+map_df(organizers, `[`, c("firstname", "lastname"))
+```
+
+-> Only works if each column has the same number of elements
+
+(Watch out for map_df... you may get great results or a colossal fail)
+
+# Nested lists  
+
+```{r}
+library(jsonlite)
+nobel <- fromJSON("http://api.nobelprize.org/v1/prize.json")
+View(nobel)
+```
+
+```{r}
+year <- nobel$prizes$year
+category <- nobel$prizes$category
+laureates <- nobel$prizes$laureates
+View(laureates)
+```
+
+What is the total number of people who have won nobel prizes (don't count organizations)?
+
+```{r}
+winners <- map(laureates, "surname")
+
+removeblank <- function(x) {
+  x[x != ""]
+}
+
+winners <- map(winners, removeblank) %>% compact()
+
+mean(map_int(winners, ~length(.x))
+```
+
+
+
+
+
+For more practice:
+
+Jenny Bryan "repurrrsive" package
+
+https://github.com/jdorfman/awesome-json-datasets
+
+Joyce Robbins
+
+jtr13@columbia.edu    @jtrnyc
+
+
