@@ -280,7 +280,7 @@ snowmean <- function(x) mean(na.omit(x))
 # test it
 snowmean(c(NA, 3, 5))
 
-dailymeans <- map(snow, snowsum)
+dailymeans <- map(snow, snowmean)
 dailymeans[1:3]
 ```
 
