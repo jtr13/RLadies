@@ -1,9 +1,7 @@
 ---
 title: "Purrr Tutorial"
 author: "Joyce Robbins"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
