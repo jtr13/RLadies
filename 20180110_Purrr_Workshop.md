@@ -10,6 +10,9 @@ Note: if you're reading the online version (.md), you may want to switch to the 
 
 <a href="https://raw.githubusercontent.com/jtr13/RLadies/master/20180110_Purrr_Workshop.Rmd" download="20180110_Purrr_Workshop.Rmd">Download</a>
 
+<button type="submit" onclick="window.open('https://raw.githubusercontent.com/jtr13/RLadies/master/20180110_Purrr_Workshop.Rmd')">
+Download!
+</button>
 Agenda
 ======
 
