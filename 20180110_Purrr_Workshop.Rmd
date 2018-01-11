@@ -1,7 +1,7 @@
 ---
 title: "Purrr Tutorial"
 author: "Joyce Robbins"
-output: pdf_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,9 +15,6 @@ January 10, 2018
 
 jtr13@columbia.edu      Twitter: @jtrnyc
 
-Note: if you're reading the .html version, you may want to switch to the .Rmd version so you can run the code yourself. It is available here: 
-
-https://github.com/jtr13/RLadies/blob/master/20180110_Purrr_Workshop.Rmd
 
 # Agenda
 
