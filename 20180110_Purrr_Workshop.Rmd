@@ -3,7 +3,7 @@ title: "Purrr Tutorial"
 author: "Joyce Robbins"
 output: slidy_presentation
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +21,7 @@ jtr13@columbia.edu      Twitter: @jtrnyc
 
 this file: https://github.com/jtr13/RLadies/blob/master/20180110_Purrr_Workshop.Rmd
 
-
+install purrr package
 
 # Agenda
 
@@ -101,6 +101,7 @@ x
 ### data frame / tibble
 
 ```{r tibble1}
+library(tidyverse)
 tib <- tibble(a = c(1, 2), b = c(3, 4), c = c("cat", "dog"))
 tib
 ```
@@ -118,6 +119,7 @@ df
 x <- list(a = c(first = 1, second = 2),
          b = c(TRUE, FALSE, TRUE), 
          c = c("cat", "dog", "fish", "elephant"))
+x
 ```
 
 What does the data structure look like?
@@ -256,7 +258,7 @@ lapply(df, mean)
 ```{r map1}
 library(tidyverse)
 # Or this:
-map(df, mean)
+map(df, sum)
 ```
 
 
@@ -270,6 +272,7 @@ snow.csv: February 2017, New York State, daily by collecting station (349)
 snow <- read_csv("snow.csv")
 dim(snow)
 View(snow)
+map(snow, mean)
 ```
 
 
@@ -289,15 +292,15 @@ Use an anonymous function to do the same thing:
 
 ```{r before}
 # from before:
-snowsum <- function(x) sum(na.omit(x))
-total <- map(snow, snowsum)
+snowmean <- function(x) mean(na.omit(x))
+total <- map(snow, snowmean)
 ```
 
 
 # Version 1: replace function name with function contents
 
 ```{r version1}
-total <- map(snow, function(x) sum(na.omit(x)))
+total <- map(snow, function(j) mean(na.omit(j)))
 total[1:3]
 ```
 
@@ -305,14 +308,18 @@ total[1:3]
 # Version 2: replace "x" with ".x" (it's just another variable name)
 
 ```{r}
-total <- map(snow, function(.x) sum(na.omit(.x)))
+total <- map(snow, function(.x) mean(na.omit(.x)))
 total[1:3]
 ```
 
 # Version 3: replace "function(.x)" with "~"  (you must use .x if you do this)
 
 ```{r}
-total <- map(snow, ~sum(na.omit(.x)))
+total <- map(snow, ~mean(na.omit(.x)))
+total[1:3]
+
+map(snow, mean, na.rm= TRUE)
+map(snow, round, 1)
 ```
 
 -> If you don't like this notation, stick with named functions!
@@ -320,8 +327,8 @@ total <- map(snow, ~sum(na.omit(.x)))
 -> One more thing: we can use typed functions 
 
 ```{r}
-total <- map_dbl(snow, ~sum(na.omit(.x)))
-total
+map_dbl(snow, ~mean(na.omit(.x)))
+
 ```
 
 -> map returns a LIST of double, map_dbl returns a VECTOR of double
@@ -356,7 +363,7 @@ map(x, 2)
 
 Get the third item:
 ```{r}
-map(x, 3)
+map(x, -1)
 ```
 
 Get the last item:
@@ -374,7 +381,7 @@ Get the named items from a list:
 ```{r}
 organizers <- list(
   list(firstname = "Soumya", lastname = "Kalra"),
-  list(firstname = "Brooke", lastname = "Watson"),
+  list(firstname = "Brooke"),
   list(firstname = "Emily", lastname = "Zabor"),
   list(firstname = "Gabriela", lastname = "Hempfling"),
   list(firstname = "Emily", lastname = "Robinson"),
@@ -383,12 +390,12 @@ organizers <- list(
 ```
 
 ```{r}
-map(organizers, "firstname")
+map_chr(organizers, "firstname")
 ```
 
 
 ```{r}
-map_chr(organizers, "firstname")
+map(organizers, "lastname")
 ```
 
 Create a data frame from a list:
@@ -411,6 +418,7 @@ map_df(organizers, `[`, c("firstname", "lastname"))
 library(jsonlite)
 nobel <- fromJSON("http://api.nobelprize.org/v1/prize.json")
 View(nobel)
+str(nobel)
 ```
 
 ```{r}
@@ -429,9 +437,16 @@ removeblank <- function(x) {
   x[x != ""]
 }
 
-winners <- map(winners, removeblank) %>% compact()
+winners <- map(winners, removeblank) 
+head(winners)
 
-mean(map_int(winners, ~length(.x))
+%>% compact()
+
+str(winners)
+length("")
+
+numwinners <- sum(map_int(winners, ~length(.x)))
+length(winners)
 ```
 
 
