@@ -1,27 +1,25 @@
 ---
 title: "Purrr Tutorial"
 author: "Joyce Robbins"
-output: slidy_presentation
-editor_options: 
-  chunk_output_type: console
+output: 
+  html_document:
+    css: styles.css
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, 
-                      warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      cache = TRUE)
 ```
-
-# Purrr Tutorial
 
 January 10, 2018
 
-Joyce Robbins
-
 jtr13@columbia.edu      Twitter: @jtrnyc
 
-this file: https://github.com/jtr13/RLadies/blob/master/20180110_Purrr_Workshop.Rmd
+Note: if you're reading the .html version, you may want to switch to the .Rmd version so you can run the code yourself. It is available here: 
 
-install purrr package
+https://github.com/jtr13/RLadies/blob/master/20180110_Purrr_Workshop.Rmd
 
 # Agenda
 
@@ -33,10 +31,7 @@ install purrr package
 
 * Cleaner code
 
-
-
-### 2. <strike>Review of fundamentals</strike>
-  Mindfulness/Vigilance of
+### 2. <strike>Review of fundamentals</strike> Mindfulness/Vigilance of
   
   * data types: integer, double, logical, character, factor
   
@@ -44,15 +39,11 @@ install purrr package
   
   ... in the context of functions
 
-
-
 ### 3. Data frames
 
   * do something to a column
   
   * do it to every column
-
-
 
 ### 4. Simple (unnested) lists
 
@@ -60,32 +51,75 @@ install purrr package
   
   * combine multiple pieces of information into a data frame
 
-
-
 ### 5. Nested lists
-
-
-
-
-
-
-
 
 # R you ready?
 
-```{r ready}
+```{r ready, echo = FALSE}
 knitr::include_graphics("wecandoit.jpg")
 ```
 
+# Data types 
+(added after workshop)
 
+### integer
+```{r}
+x <- 1:3
+x
+class(x)
+```
 
+Note: There's no way to tell by just looking at `x` whether it's of type integer or double.  It might look the same but be a different type:
 
+```{r}
+x <- c(1, 2, 3)
+x
+class(x)
+```
 
+Note: `numeric` is an umbrella category for double and integer; however, if you see "numeric" think "double"
 
+### logical
+```{r}
+x <- c(TRUE, FALSE, FALSE)
+x
+```
 
+Note: no quotes, all caps, only TRUE or FALSE... no brainer
 
+```{r}
+class(x)
+```
 
+Not a surprise.
 
+### character
+```{r}
+x <- c("a", "b", "c", "1")
+x
+```
+
+Note: the quotes tell you that it's character data.
+
+```{r}
+class(x)
+```
+
+Indeed.
+
+### factor
+```{r}
+x <- factor(c("a", "b", "c"))
+x
+```
+
+Notes: No quotes and especially "Levels" are the giveaways that we are dealing we factor data. (Bonus fact: factors are stored as integers, but no need to get into that now.)
+
+```{r}
+class(x)
+```
+
+As I said.
 
 # Data structures
 
@@ -96,8 +130,6 @@ x <- c(3, 4, 5)
 x
 ```
  
-
-
 ### data frame / tibble
 
 ```{r tibble1}
@@ -111,56 +143,36 @@ df <- data.frame(a = c(1, 2), b = c(3, 4), c = c("cat", "dog"))
 df
 ```
 
-
-
 ### list
 
 ```{r list1}
 x <- list(a = c(first = 1, second = 2),
          b = c(TRUE, FALSE, TRUE), 
          c = c("cat", "dog", "fish", "elephant"))
-x
 ```
 
-What does the data structure look like?
-
---> You need to know what you have
+What does the data structure look like? (You need to know what you have! Hypervigilance!)
 
 My 3 go-tos: 
 
- * x
-
- * str(x)
-
- * Object Explorer a.k.a. View(x)
-
-
+1. 
 ```{r x}
 x
 ```
 
+2. 
 
-
-
-str()
-```{r str1}
+```{r str1, echo = FALSE}
 knitr::include_graphics("stiritup.png")
 ```
-
-
 
 ```{r strx}
 str(x)
 ```
 
+3. Object Explorer 
 
-
-
-
-Object Explorer
-
-
-
+(To use View(x) with lists, you need RStudio v1.1 -- or, for future readers v1.1 or later -- see more about Object Explorer here: https://blog.rstudio.com/2017/10/09/rstudio-v1.1-released/)
 
 ```{r another example}
 xvar <- rnorm(10)
@@ -168,8 +180,6 @@ yvar <- xvar + rnorm(10)
 mod <- lm(yvar ~ xvar)
 # Go to Object Explorer
 ```
-
-
 
 
 # Simple functions
@@ -226,12 +236,16 @@ y
 round(y, 1)
 ```
 
-Now we're ready for map (or lapply) to do the same thing to each column of a data frame.
+We were able to do the same thing (take the square root) of every element of a vector the same way we would take the square root of a single number because that's the way vectors work in R. (This is not the case for most other languages!)
+
+Now we're ready to up our game and learn how to do the same thing to every column of a data frame. To do so, we'll use `map` (or `lapply`). (There are plenty of other ways to work with data frames, but this is a `purrr` workshop so we're going to use `purrr` functions. Once we get comfortable using `purrr` functions with data frames, we'll move on to lists where you'll see the real power of the functions.)
 
 
 # Data frames
 
-```{r dataframe1}
+### Do the same thing to every column:
+
+```{r dataframe2}
 df <- data.frame(
   x = c(3, 4, 5, 6),
   y = c(7, 8, 9, 10),
@@ -241,9 +255,8 @@ df
 
 How do we take the mean of each column?
 
-
 ```{r forloop1}
-# Don't do this:
+# Works, but not the best choice:
 for (i in 1:3) print(mean(df[,i]))
 ```
 
@@ -253,31 +266,43 @@ for (i in 1:3) print(mean(df[,i]))
 lapply(df, mean)
 ```
 
-
+Mindfulness note: we put in a data frame and got back a *list*.
 
 ```{r map1}
-library(tidyverse)
 # Or this:
+library(tidyverse)
 map(df, sum)
 ```
 
+Mindfulness note: once again, we put in a data frame and got back a *list*.
 
 Find the mean snowfall by day (that is, find the mean for each column separately)
 
-Problem: lots of NAs
+Data: https://raw.githubusercontent.com/jtr13/RLadies/master/snow.csv
 
-snow.csv: February 2017, New York State, daily by collecting station (349)
+Original data source: https://www.ncdc.noaa.gov/snow-and-ice/daily-snow/NY/snowfall/20170201
+
+Data notes: Each column represents the number of inches of snow in each of 349 collecting stations in New York State during one day in February 2017.
 
 ```{r snow}
-snow <- read_csv("snow.csv")
+snow <- read_csv("https://raw.githubusercontent.com/jtr13/RLadies/master/snow.csv")
 dim(snow)
-View(snow)
-map(snow, mean)
+# Uncomment if you're running the code yourself:
+# View(snow) 
 ```
 
+Let's try the same method we used before to get the mean of each column:
 
+```{r}
+snowmeans <- map(snow, mean)
+snowmeans[1:3]
+```
 
-```{r snowtotals}
+We have a problem: the NAs are causing the means to be NA as well
+
+One solution: write a function to remove the NAs and then take the mean
+
+```{r snowmean}
 snowmean <- function(x) mean(na.omit(x))
 
 # test it
@@ -287,8 +312,11 @@ dailymeans <- map(snow, snowmean)
 dailymeans[1:3]
 ```
 
+It works!
 
-Use an anonymous function to do the same thing:
+### Simply your code by making the function *anonymous*
+
+By replacing the function *name* with the function *contents* (think: algebraic substitution) we get a function with no name that performs just like the named one.
 
 ```{r before}
 # from before:
@@ -297,48 +325,81 @@ total <- map(snow, snowmean)
 ```
 
 
-# Version 1: replace function name with function contents
+### Version 1: replace function name with function contents
 
 ```{r version1}
-total <- map(snow, function(j) mean(na.omit(j)))
+total <- map(snow, function(x) mean(na.omit(x)))
 total[1:3]
 ```
 
 
-# Version 2: replace "x" with ".x" (it's just another variable name)
+### Version 2: replace "x" with ".x" (Do not be intimidated by the "." It's just a weirdly named variable.)
+
+```{r}
+.n <- "Hi. My name starts with a dot. Does yours?"
+.n
+```
+
+
 
 ```{r}
 total <- map(snow, function(.x) mean(na.omit(.x)))
 total[1:3]
 ```
 
-# Version 3: replace "function(.x)" with "~"  (you must use .x if you do this)
+(So far you can do the same with `lapply`)
+
+
+### Version 3: Use a `purrr` shortcut:
+
+Replace "`function(.x)`" with "`~`"  (if so, you must use `.x`, not `.a, .b, .y` or anything else)
+
+*This is unique to* **`purrr`** *functions.*
+
+-> If you don't like this notation, stick with named functions! (Until writing out "function" becomes tiresome...)
 
 ```{r}
 total <- map(snow, ~mean(na.omit(.x)))
 total[1:3]
-
-map(snow, mean, na.rm= TRUE)
-map(snow, round, 1)
 ```
 
--> If you don't like this notation, stick with named functions!
+Another solution (thanks RLadies workshop participants!):
 
--> One more thing: we can use typed functions 
+Pass an additional parameter to `map`:
+
+```{r}
+snowmeans <- map(snow, mean, na.rm= TRUE)
+snowmeans[1:3]
+```
+
+(also works with `lapply`)
+
+Another example of passing an additional parameter to `map`:
+
+```{r}
+x <- tibble(a = rnorm(5), b = rnorm(5), c = rnorm(5))
+x
+map(x, round, 1)
+```
+
+
+# Typed functions (`map_dbl`, `map_int`, `map_lgl`, `map_chr`)
+
+Why? Often we would prefer to get back a vector rather than a list.
 
 ```{r}
 map_dbl(snow, ~mean(na.omit(.x)))
 
 ```
 
--> map returns a LIST of double, map_dbl returns a VECTOR of double
+-> `map()` returns a LIST of double, `map_dbl()` returns a VECTOR of double
 
--> map_lgl, map_int, map_chr all return VECTORS of type ...
+-> `map_lgl()`, `map_int()`, `map_chr()` all return VECTORS of type ...
 
 RECAP
 -> We can do the same thing to every column of a data frame
 
--> Get the function the work on one vector before you try it on the whole data frame
+-> Get the function to work on one vector before you try it on the whole data frame
 
 
 # Lists
@@ -349,24 +410,36 @@ x <- list(a = c(first = 1, second = 2),
          c = c("cat", "dog", "fish", "elephant"))
 ```
 
-Get the first item in each list:
+### Get the particular items from a list
+
+First item:
 
 ```{r}
 map(x, 1)
 ```
 
-Get the second item:
+(I swear this was not intentional. `purrr` works in strange ways.)
+
+```{r purrrsticker, echo = FALSE}
+knitr::include_graphics("purrr.jpg")
+```
+
+
+
+
+Second item:
 
 ```{r}
 map(x, 2)
 ```
 
-Get the third item:
+Third item:
+
 ```{r}
-map(x, -1)
+map(x, 3)
 ```
 
-Get the last item:
+Last item:
 
 ```{r}
 map(x, tail, 1)
@@ -376,12 +449,12 @@ map(x, tail, 1)
 lapply(x, tail, 1)
 ```
 
-Get the named items from a list:
+### Get the named items from a list:
 
 ```{r}
 organizers <- list(
   list(firstname = "Soumya", lastname = "Kalra"),
-  list(firstname = "Brooke"),
+  list(firstname = "Brooke", lastname = "Watson"),
   list(firstname = "Emily", lastname = "Zabor"),
   list(firstname = "Gabriela", lastname = "Hempfling"),
   list(firstname = "Emily", lastname = "Robinson"),
@@ -394,10 +467,6 @@ map_chr(organizers, "firstname")
 ```
 
 
-```{r}
-map(organizers, "lastname")
-```
-
 Create a data frame from a list:
 
 ```{r}
@@ -408,56 +477,68 @@ map(organizers, `[`, "firstname")
 map_df(organizers, `[`, c("firstname", "lastname"))
 ```
 
--> Only works if each column has the same number of elements
-
-(Watch out for map_df... you may get great results or a colossal fail)
+-> Only works if each column has the same number of elements and the elements are named
 
 # Nested lists  
 
 ```{r}
 library(jsonlite)
 nobel <- fromJSON("http://api.nobelprize.org/v1/prize.json")
-View(nobel)
-str(nobel)
 ```
 
 ```{r}
 year <- nobel$prizes$year
 category <- nobel$prizes$category
 laureates <- nobel$prizes$laureates
-View(laureates)
+# View(laureates)
 ```
 
-What is the total number of people who have won nobel prizes (don't count organizations)?
+What is the total number of people who have won nobel prizes?
 
 ```{r}
 winners <- map(laureates, "surname")
 
+sum(map_int(winners, ~length(.x)))
+```
+
+That sum includes organizations... how many individual (people) winners are there? To find out, we need to remove the organizations:
+
+```{r}
 removeblank <- function(x) {
   x[x != ""]
 }
 
-winners <- map(winners, removeblank) 
-head(winners)
+winners <- map(winners, removeblank)
 
-%>% compact()
-
-str(winners)
-length("")
-
-numwinners <- sum(map_int(winners, ~length(.x)))
-length(winners)
+sum(map_int(winners, ~length(.x)))
 ```
 
+Alternatively, we could combine the above into one function call:
 
+```{r}
+sum(map_int(winners, ~length(.x[.x != ""])))
+```
 
+And finally another approach:
 
+```{r}
+laureates %>% 
+  map("surname") %>% 
+  unlist %>% 
+  enframe %>% 
+  filter(value != "") %>% 
+  nrow
+```
 
-For more practice:
+(If you have a better way of doing this let me know!)
 
-Jenny Bryan "repurrrsive" package
+For more practice with `purrr`, see:
 
-https://github.com/jdorfman/awesome-json-datasets
+1. Jenny Bryan's "repurrrsive" package
+
+2. https://github.com/jdorfman/awesome-json-datasets
+
+Thanks for attending! Feel free to be in touch with comments or questions:
 
 Joyce Robbins
 
